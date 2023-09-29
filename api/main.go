@@ -4,41 +4,35 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/majolo/web-app-starter/gateway"
+	"github.com/majolo/web-app-starter/gen/diary/v1"
+	"github.com/majolo/web-app-starter/services"
 	"google.golang.org/grpc"
 	"log"
-	"net"
-	"sync"
 )
 
 var (
-	grpcPort = flag.Int("port", 50051, "The server grpc port")
+	httpPort = flag.Int("port", 8080, "The server http port")
 )
 
 func main() {
 	flag.Parse()
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *grpcPort))
+	httpServer, err := gateway.NewServer(gateway.Args{
+		Port: uint(*httpPort),
+	})
 	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		log.Fatalf("failed to create http server: %v", err)
 	}
-	log.Printf("server listening at %v", lis.Addr())
-
-	chartServer := implementation.NewChartService(fsClient, websiteDomain)
 	grpcServer := grpc.NewServer()
-	charts.RegisterChartsServer(grpcServer, chartServer)
 
-	httpServer.Register(context.Background(), chartServer)
+	// Register services
+	diaryService := services.NewDiaryService()
+	diary.RegisterDiaryServiceServer(grpcServer, diaryService)
+	httpServer.Register(context.Background(), diaryService)
 
-	// Start services
-	serviceWaiter := sync.WaitGroup{}
-	serviceWaiter.Add(1)
-	go func() {
-		err := httpServer.Start()
-		if err != nil {
-			fmt.Println("unableToStartMsg")
-		}
-		serviceWaiter.Done()
-	}()
-
-	// Graceful shutdown
-	serviceWaiter.Wait()
+	// Start servers (just http for now)
+	err = httpServer.Start()
+	if err != nil {
+		fmt.Println("did not start http server cleanly")
+	}
 }

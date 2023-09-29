@@ -5,18 +5,18 @@ option go_package = "github.com/majolo/web-starter-pack/api/diary";
 import "google/api/annotations.proto";
 import "google/protobuf/timestamp.proto";
 
-package diary;
+package diary.v1;
 
 service DiaryService {
   rpc CreateEntry(CreateEntryRequest) returns (CreateEntryResponse) {
     option (google.api.http) = {
-      post : "/v1/diary/";
+      post : "/api/v1/diary";
       body : "*";
     };
   }
   rpc ListEntries(ListEntriesRequest) returns (ListEntriesResponse) {
     option (google.api.http) = {
-      get : "/v1/diary/";
+      get : "/api/v1/diary";
     };
   }
 }
@@ -25,7 +25,9 @@ message CreateEntryRequest {
   string text = 1;
 }
 
-message CreateEntryResponse {}
+message CreateEntryResponse {
+  int64 id = 1;
+}
 
 message ListEntriesRequest {}
 
@@ -36,4 +38,5 @@ message ListEntriesResponse {
 message Entry {
   int64 id = 1;
   string text = 2;
+  google.protobuf.Timestamp created_at = 3;
 }

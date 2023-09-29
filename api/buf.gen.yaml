@@ -1,0 +1,25 @@
+version: v1
+managed:
+  enabled: true
+plugins:
+  - plugin: buf.build/protocolbuffers/go:v1.28.1
+    out: gen
+    opt: paths=source_relative
+  - plugin: buf.build/grpc/go:v1.2.0
+    out: gen
+    opt:
+      - paths=source_relative
+  - plugin: buf.build/bufbuild/validate-go:v0.9.1
+    out: gen
+    opt:
+      - paths=source_relative
+  - plugin: buf.build/grpc-ecosystem/gateway:v2.18.0
+    out: gen
+    opt:
+      - paths=source_relative
+  - plugin: buf.build/grpc-ecosystem/openapiv2:v2.18.0
+    out: gen
+    opt:
+      - allow_merge=true
+      - merge_file_name=apis
+      - openapi_naming_strategy=fqn
