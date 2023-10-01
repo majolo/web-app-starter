@@ -1,4 +1,6 @@
 import './globals.css'
+import React from "react";
+import Navbar from "@/components/Navbar";
 
 export const metadata = {
   title: 'Create Next App',
@@ -14,6 +16,7 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <main className="min-h-screen bg-background flex flex-col items-center">
+          <Navbar/>
           {children}
         </main>
       </body>
