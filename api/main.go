@@ -31,6 +31,7 @@ func main() {
 	httpServer.Register(context.Background(), diaryService)
 
 	// Start servers (just http for now)
+	fmt.Println("starting http server")
 	err = httpServer.Start()
 	if err != nil {
 		fmt.Println("did not start http server cleanly")

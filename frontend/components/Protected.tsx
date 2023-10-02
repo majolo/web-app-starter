@@ -7,7 +7,10 @@ export default async function Protected() {
   const {
     data: { session },
   } = await supabase.auth.getSession();
-  if (!session) {
+  if (
+    !session &&
+    (usePathname() !== "/login" || usePathname() !== "/unauthenticated")
+  ) {
     redirect("/unauthenticated");
   }
   return <div />;
