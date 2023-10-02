@@ -2,9 +2,11 @@ package services
 
 import (
 	"context"
+	"fmt"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/majolo/web-app-starter/gen/diary/v1"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"log"
 	"time"
@@ -40,6 +42,21 @@ func (s *Service) CreateEntry(ctx context.Context, req *diary.CreateEntryRequest
 }
 
 func (s *Service) ListEntries(ctx context.Context, req *diary.ListEntriesRequest) (*diary.ListEntriesResponse, error) {
+	md, ok := metadata.FromIncomingContext(ctx)
+	fmt.Println(md)
+	if !ok {
+		fmt.Println("no metadata")
+	}
+
+	cookies, ok := md["cookie"]
+	if !ok {
+		fmt.Println("no cookie")
+	}
+
+	for _, cookie := range cookies {
+		fmt.Println("cookie:", cookie)
+	}
+
 	var entries []*diary.Entry
 	for id, entry := range s.inMemDiary {
 		entries = append(entries, &diary.Entry{

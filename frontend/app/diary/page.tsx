@@ -1,10 +1,19 @@
-import Protected from "@/components/Protected";
+"use client";
+import useListEntriesQuery from "@/hooks/useListEntriesQuery";
+import { DiaryV1Entry } from "@/gen/apis";
 
-export default async function Page() {
+export default function Page() {
+  const { data: entries, isLoading: isLoadingEntries } = useListEntriesQuery();
+  console.log(entries);
   return (
     <div className={"py-24"}>
-      <Protected />
-      Hello World.
+      <h1 className={"text-4xl font-bold text-center"}>Diary</h1>
+      {entries &&
+        entries?.map((entry) => (
+          <div key={entry.id}>
+            <p className={"text-lg"}>{entry.text}</p>
+          </div>
+        ))}
     </div>
   );
 }

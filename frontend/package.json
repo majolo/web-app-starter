@@ -3,16 +3,19 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "generate-client": "npx swagger-typescript-api -p ../api/gen/apis.swagger.json -o ./gen -n apis.ts"
   },
   "dependencies": {
     "@supabase/auth-helpers-nextjs": "latest",
     "@supabase/supabase-js": "latest",
+    "@tanstack/react-query": "^4.35.7",
     "autoprefixer": "10.4.15",
     "next": "latest",
     "postcss": "8.4.29",
     "react": "18.2.0",
     "react-dom": "18.2.0",
+    "swagger-typescript-api": "^13.0.3",
     "tailwindcss": "3.3.3",
     "typescript": "5.1.3"
   },
