@@ -1,8 +1,8 @@
-import "./globals.css";
+import "../globals.css";
 import React from "react";
-import Navbar from "@/components/Navbar";
-import Providers from "@/app/providers";
-import Protected from "@/components/Protected";
+import Navbar from "@/app/components/Navbar";
+import Providers from "@/app/(protected)/providers";
+import Protected from "@/app/components/Protected";
 
 export const metadata = {
   title: "Web App Starter",

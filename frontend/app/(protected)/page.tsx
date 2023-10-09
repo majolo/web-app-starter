@@ -1,10 +1,8 @@
 "use client";
 import useListEntriesQuery from "@/hooks/useListEntriesQuery";
-import { DiaryV1Entry } from "@/gen/apis";
 
 export default function Page() {
-  const { data: entries, isLoading: isLoadingEntries } = useListEntriesQuery();
-  console.log(entries);
+  const { data: entries } = useListEntriesQuery();
   return (
     <div className={"py-24"}>
       <h1 className={"text-4xl font-bold text-center"}>Diary</h1>

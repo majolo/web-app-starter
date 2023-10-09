@@ -5,26 +5,33 @@ import (
 	"fmt"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/majolo/web-app-starter/gen/diary/v1"
+	"github.com/nedpals/supabase-go"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"log"
+	"net/http"
+	"net/url"
+	"strings"
 	"time"
 )
 
 type Entry struct {
 	text      string
 	createdAt time.Time
+	userId    int
 }
 
 type Service struct {
 	inMemDiary map[int64]Entry
 	diary.UnimplementedDiaryServiceServer
+	supabaseClient *supabase.Client
 }
 
-func NewDiaryService() *Service {
+func NewDiaryService(supabase *supabase.Client) *Service {
 	s := &Service{
-		inMemDiary: map[int64]Entry{},
+		inMemDiary:     map[int64]Entry{0: {text: "starter entry", createdAt: time.Now()}},
+		supabaseClient: supabase,
 	}
 	return s
 }
@@ -43,19 +50,49 @@ func (s *Service) CreateEntry(ctx context.Context, req *diary.CreateEntryRequest
 
 func (s *Service) ListEntries(ctx context.Context, req *diary.ListEntriesRequest) (*diary.ListEntriesResponse, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
-	fmt.Println(md)
 	if !ok {
-		fmt.Println("no metadata")
+		return nil, fmt.Errorf("no metadata")
+	}
+	cookiesStr, ok := md["grpcgateway-cookie"]
+	if !ok {
+		return nil, fmt.Errorf("no cookie")
 	}
 
-	cookies, ok := md["cookie"]
-	if !ok {
-		fmt.Println("no cookie")
+	// New code to extract sAccessToken
+	var sAccessToken string
+	for _, cookieStr := range cookiesStr {
+		header := http.Header{}
+		header.Add("Cookie", cookieStr)
+		request := http.Request{Header: header}
+		cookies := request.Cookies()
+		for _, cookie := range cookies {
+			// find the cookie that starts with sb- and ends with -auth-token
+			// this is not sustainable as these names are internal but it can be fixed longer term
+			if strings.HasPrefix(cookie.Name, "sb-") &&
+				strings.HasSuffix(cookie.Name, "-auth-token") {
+				fmt.Println(cookie.Value)
+			}
+			fmt.Println(cookie.Name)
+		}
+	}
+	return nil, nil
+
+	if sAccessToken == "" {
+		return nil, fmt.Errorf("no sAccessToken found")
 	}
 
-	for _, cookie := range cookies {
-		fmt.Println("cookie:", cookie)
+	decodedValue, err := url.QueryUnescape(sAccessToken)
+	if err != nil {
+		return nil, err
 	}
+
+	user, err := s.verifyTokenSupabase(decodedValue)
+	if err != nil {
+		return nil, err
+	}
+	log.Printf("user: %+v", user)
+
+	// extract sAccessToken from cookie
 
 	var entries []*diary.Entry
 	for id, entry := range s.inMemDiary {
@@ -79,4 +116,14 @@ func (s *Service) RegisterGRPCGateway(ctx context.Context, mux *runtime.ServeMux
 	if err != nil {
 		log.Fatalf("failed to register gateway: %v", err)
 	}
+}
+
+func (s *Service) verifyTokenSupabase(token string) (*supabase.User, error) {
+	// Should re-use context?
+	ctx := context.Background()
+	user, err := s.supabaseClient.Auth.User(ctx, token)
+	if err != nil {
+		return user, err
+	}
+	return user, nil
 }
