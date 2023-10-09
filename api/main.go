@@ -7,8 +7,10 @@ import (
 	"github.com/majolo/web-app-starter/gateway"
 	"github.com/majolo/web-app-starter/gen/diary/v1"
 	"github.com/majolo/web-app-starter/services"
+	"github.com/nedpals/supabase-go"
 	"google.golang.org/grpc"
 	"log"
+	"os"
 )
 
 var (
@@ -25,8 +27,12 @@ func main() {
 	}
 	grpcServer := grpc.NewServer()
 
+	supabaseUrl := os.Getenv("NEXT_PUBLIC_SUPABASE_URL")
+	supabaseAnonKey := os.Getenv("NEXT_PUBLIC_SUPABASE_ANON_KEY")
+	supabaseClient := supabase.CreateClient(supabaseUrl, supabaseAnonKey)
+
 	// Register services
-	diaryService := services.NewDiaryService()
+	diaryService := services.NewDiaryService(supabaseClient)
 	diary.RegisterDiaryServiceServer(grpcServer, diaryService)
 	httpServer.Register(context.Background(), diaryService)
 
