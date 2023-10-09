@@ -25,6 +25,7 @@ func corsMiddleware(next http.Handler) http.Handler {
 		// Note that in reality you would likely not want to allow all.
 		response.Header().Set("Access-Control-Allow-Origin", r.Header.Get("Origin"))
 		response.Header().Set("Access-Control-Allow-Credentials", "true")
+		response.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 		if r.Method == "OPTIONS" {
 			response.Header().Set("Access-Control-Allow-Methods", "*")
 			response.Write([]byte(""))

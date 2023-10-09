@@ -15,7 +15,7 @@ export default async function Navbar() {
       <div />
       {user ? (
         <div className="flex items-center gap-4">
-          Hey, {user.id}!
+          Hey, {user.email}!
           <LogoutButton />
         </div>
       ) : (
