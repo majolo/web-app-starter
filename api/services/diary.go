@@ -5,35 +5,34 @@ import (
 	"fmt"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/majolo/web-app-starter/gen/diary/v1"
+	"github.com/majolo/web-app-starter/services/diary_dao"
 	"github.com/nedpals/supabase-go"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/protobuf/types/known/timestamppb"
+	"gorm.io/gorm"
 	"log"
 	"net/http"
 	"net/url"
 	"strings"
-	"time"
 )
 
-type Entry struct {
-	text      string
-	createdAt time.Time
-	userId    string
-}
-
 type Service struct {
-	inMemDiary map[int64]Entry
 	diary.UnimplementedDiaryServiceServer
 	supabaseClient *supabase.Client
+	dao            diary_dao.DiaryDAO
 }
 
-func NewDiaryService(supabase *supabase.Client) *Service {
+func NewDiaryService(supabase *supabase.Client, db *gorm.DB) (*Service, error) {
+	dao, err := diary_dao.NewDiaryDAO(db)
+	if err != nil {
+		return nil, err
+	}
 	s := &Service{
-		inMemDiary:     map[int64]Entry{0: {text: "starter entry", createdAt: time.Now(), userId: "1"}},
+		dao:            dao,
 		supabaseClient: supabase,
 	}
-	return s
+	return s, nil
 }
 
 func (s *Service) CreateEntry(ctx context.Context, req *diary.CreateEntryRequest) (*diary.CreateEntryResponse, error) {
@@ -44,15 +43,15 @@ func (s *Service) CreateEntry(ctx context.Context, req *diary.CreateEntryRequest
 	if req.GetText() == "" {
 		return nil, fmt.Errorf("text cannot be empty")
 	}
-	entry := Entry{
-		text:      req.GetText(),
-		createdAt: time.Now(),
-		userId:    user.ID,
+	entryId, err := s.dao.CreateDiaryEntry(ctx, diary_dao.Entry{
+		Text:   req.GetText(),
+		UserId: user.ID,
+	})
+	if err != nil {
+		return nil, err
 	}
-	id := int64(len(s.inMemDiary) + 1)
-	s.inMemDiary[id] = entry
 	return &diary.CreateEntryResponse{
-		Id: id,
+		Id: int64(entryId),
 	}, nil
 }
 
@@ -62,14 +61,15 @@ func (s *Service) ListEntries(ctx context.Context, req *diary.ListEntriesRequest
 		return nil, err
 	}
 	var entries []*diary.Entry
-	for id, entry := range s.inMemDiary {
-		if entry.userId != user.ID {
-			continue
-		}
+	dbEntries, err := s.dao.ListDiaryEntries(ctx, user.ID)
+	if err != nil {
+		return nil, err
+	}
+	for _, entry := range dbEntries {
 		entries = append(entries, &diary.Entry{
-			Id:        id,
-			Text:      entry.text,
-			CreatedAt: timestamppb.New(entry.createdAt),
+			Id:        int64(entry.ID),
+			Text:      entry.Text,
+			CreatedAt: timestamppb.New(entry.CreatedAt),
 		})
 	}
 	return &diary.ListEntriesResponse{
