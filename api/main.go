@@ -16,6 +16,12 @@ import (
 
 var (
 	httpPort = flag.Int("port", 8080, "The server http port")
+	dbHost   = flag.String("db-host", "localhost", "The database host")
+	dbPort   = flag.String("db-port", "5432", "The database port")
+	dbUser   = flag.String("db-user", "user", "The database user")
+	dbPass   = flag.String("db-pass", "password", "The database password")
+	dbName   = flag.String("db-name", "diarydb", "The database name")
+	//dbSSL    = flag.String("db-ssl", "require", "The database ssl mode")
 )
 
 func main() {
@@ -32,26 +38,17 @@ func main() {
 	supabaseAnonKey := os.Getenv("NEXT_PUBLIC_SUPABASE_ANON_KEY")
 	supabaseClient := supabase.CreateClient(supabaseUrl, supabaseAnonKey)
 
-	//config := PostgresConnConfig{
-	//	Host:     osutil.GetEnv(ENV_HOST, "localhost"),
-	//	Port:     osutil.GetEnv(ENV_PORT, "5432"),
-	//	User:     osutil.GetEnv(ENV_USER, "user"),
-	//	Password: osutil.GetEnv(ENV_PASSWORD, "password"),
-	//	DBName:   osutil.GetEnv(ENV_DBNAME, "seldon"),
-	//	SSLMode:  osutil.GetEnv(ENV_SSLMODE, "require"),
-	//	LogLevel: logLevel,
-	//}
-
 	db, err := database.PostgresGormDB(database.PostgresConnConfig{
 		Address: database.Address{
-			Host:   "",
-			Port:   "",
-			DBName: "",
+			Host:   *dbHost,
+			Port:   *dbPort,
+			DBName: *dbName,
 		},
 		Auth: database.Auth{
-			User:     "",
-			Password: "",
+			User:     *dbUser,
+			Password: *dbPass,
 		},
+		// TODO: these may be needed
 		TLSConfig: database.TLSConfig{
 			TLSMode:    "",
 			CACertPath: "",
@@ -69,7 +66,10 @@ func main() {
 	}
 
 	// Register services
-	diaryService := services.NewDiaryService(supabaseClient)
+	diaryService, err := services.NewDiaryService(supabaseClient, db)
+	if err != nil {
+		log.Fatalf("failed to create diary service: %v", err)
+	}
 	diary.RegisterDiaryServiceServer(grpcServer, diaryService)
 	httpServer.Register(context.Background(), diaryService)
 
