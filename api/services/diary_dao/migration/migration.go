@@ -3,6 +3,7 @@ package migration
 import (
 	"github.com/go-gormigrate/gormigrate/v2"
 	"gorm.io/gorm"
+	"time"
 )
 
 var MigrationsDiary = []*gormigrate.Migration{
@@ -10,21 +11,21 @@ var MigrationsDiary = []*gormigrate.Migration{
 		ID: "0001_initial_diary",
 		Migrate: func(db *gorm.DB) error {
 			// Copy the struct to avoid side effects and preserves original changes.
-			type Version struct {
+			type Entry struct {
 				gorm.Model
-				ModelMetadataID uint
-				Version         string
-				VersionUriPath  string // Path to the model folder within specified remote.
-				RCloneRemote    string // Remote name from configured remotes.
+				UserId    string
+				Text      string
+				CreatedAt time.Time
 			}
-			if err := db.AutoMigrate(&Version{}); err != nil {
+
+			if err := db.AutoMigrate(&Entry{}); err != nil {
 				return err
 			}
 			return nil
 		},
 		Rollback: func(db *gorm.DB) error {
-			type Version struct{}
-			if err := db.Migrator().DropTable(Version{}); err != nil {
+			type Entry struct{}
+			if err := db.Migrator().DropTable(Entry{}); err != nil {
 				return err
 			}
 			return nil

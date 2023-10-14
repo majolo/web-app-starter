@@ -43,7 +43,7 @@ func (s *Service) CreateEntry(ctx context.Context, req *diary.CreateEntryRequest
 	if req.GetText() == "" {
 		return nil, fmt.Errorf("text cannot be empty")
 	}
-	entryId, err := s.dao.CreateDiaryEntry(ctx, diary_dao.Entry{
+	entryId, err := s.dao.CreateDiaryEntry(ctx, &diary_dao.Entry{
 		Text:   req.GetText(),
 		UserId: user.ID,
 	})
