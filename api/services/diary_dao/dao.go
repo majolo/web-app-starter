@@ -2,6 +2,7 @@ package diary_dao
 
 import (
 	"context"
+	"fmt"
 	"github.com/majolo/web-app-starter/services/diary_dao/migration"
 	"time"
 
@@ -30,7 +31,10 @@ func NewDiaryDAO(db *gorm.DB) (DiaryDAO, error) {
 	}, nil
 }
 
-func (d *DiaryDAO) CreateDiaryEntry(ctx context.Context, entry Entry) (uint, error) {
+func (d *DiaryDAO) CreateDiaryEntry(ctx context.Context, entry *Entry) (uint, error) {
+	if entry == nil {
+		return 0, fmt.Errorf("no entry provided")
+	}
 	entry.CreatedAt = time.Now()
 	tx := d.db.Begin().WithContext(ctx)
 	err := tx.Create(entry).Error
