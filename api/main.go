@@ -17,10 +17,11 @@ import (
 var (
 	httpPort = flag.Int("port", 8080, "The server http port")
 	dbHost   = flag.String("db-host", "localhost", "The database host")
-	dbPort   = flag.String("db-port", "5432", "The database port")
-	dbUser   = flag.String("db-user", "postgres", "The database user")
 	dbPass   = flag.String("db-pass", "password", "The database password")
-	dbName   = flag.String("db-name", "diarydb", "The database name")
+
+	dbPort = flag.String("db-port", "5432", "The database port")
+	dbUser = flag.String("db-user", "postgres", "The database user")
+	dbName = flag.String("db-name", "postgres", "The database name")
 	//dbSSL    = flag.String("db-ssl", "require", "The database ssl mode")
 )
 
